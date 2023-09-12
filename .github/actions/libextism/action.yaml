@@ -28,4 +28,4 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: libextism-h-artifact
-        path: /usr/local/include/libextism.h
+        path: /usr/local/include/extism.h
