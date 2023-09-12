@@ -50,11 +50,12 @@ class TestExtism < Minitest::Test
   def test_host_functions
     Extism.set_log_file('stdout', 'info')
     func = proc do |current_plugin, inputs, outputs, user_data|
-      input = current_plugin.input_as_bytes(inputs.first)
+      input = current_plugin.input_as_string(inputs.first)
       current_plugin.return_string(outputs.first, "#{input} #{user_data}")
     end
-    f = Extism::Function.new('transform_string', [Extism::ValType::I64], [Extism::ValType::I64], func, 'My User Data')
-    plugin = Extism::Plugin.new(host_manifest, [f], true)
+    f = Extism::Function.new('transform_string', [Extism::ValType::I64], [Extism::ValType::I64], func,
+                             'My User Data')
+    plugin = Extism::Plugin.new(host_manifest, functions: [f], wasi: true)
     result = plugin.call('reflect_string', 'Hello, World!')
     assert_equal result, 'Hello, World! My User Data'
   end
@@ -65,7 +66,7 @@ class TestExtism < Minitest::Test
     {
       wasm: [
         {
-          path: File.join(__dir__, '../../wasm/code.wasm')
+          path: File.join(__dir__, '../code.wasm')
         }
       ]
     }
@@ -75,7 +76,7 @@ class TestExtism < Minitest::Test
     {
       wasm: [
         {
-          path: File.join(__dir__, '../../wasm/kitchensink.wasm')
+          path: File.join(__dir__, '../kitchensink.wasm')
         }
       ]
     }
