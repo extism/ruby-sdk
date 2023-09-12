@@ -10,8 +10,8 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/libextism
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/libextism
 
   test:
     runs-on: ubuntu-latest
