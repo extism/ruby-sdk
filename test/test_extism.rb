@@ -54,7 +54,7 @@ class TestExtism < Minitest::Test
       current_plugin.return_string(outputs.first, "#{input} #{user_data}")
     end
     f = Extism::Function.new('transform_string', [Extism::ValType::I64], [Extism::ValType::I64], func,
-                             'My User Data')
+                             user_data: 'My User Data')
     plugin = Extism::Plugin.new(host_manifest, functions: [f], wasi: true)
     result = plugin.call('reflect_string', 'Hello, World!')
     assert_equal result, 'Hello, World! My User Data'

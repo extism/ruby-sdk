@@ -13,7 +13,7 @@ module Extism
       errmsg = FFI::MemoryPointer.new(:pointer)
       code.put_bytes(0, wasm)
       funcs_ptr = FFI::MemoryPointer.new(LibExtism::ExtismFunction)
-      funcs_ptr.write_array_of_pointer(functions.map { |f| f.pointer })
+      funcs_ptr.write_array_of_pointer(functions.map { |f| f.send(:pointer) })
       @plugin = LibExtism.extism_plugin_new(code, wasm.bytesize, funcs_ptr, functions.length, wasi, errmsg)
       if @plugin.null?
         err = errmsg.read_pointer.read_string

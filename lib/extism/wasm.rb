@@ -50,25 +50,38 @@ module Extism
     end
   end
 
+  # Represents a host function
   class Function
-    def initialize(name, args, returns, func_proc, user_data)
+    # Create a new host function
+    #
+    # @param name [String] Must match the import name in Wasm. Doesn't include namespace. All extism host functions are in the env name space
+    # @param params [Array[Extism::ValType]] An array of val types matching the import's params
+    # @param returns [Array[Extism::ValType]] An array of val types matching the import returns
+    # @param func_proc [Proc] A proc that will be executed when the host function is executed
+    # @param user_data [Object] Any reference to object you want to be passed back to you when the func is invoked
+    # @param on_free [Proc] A proc triggered when this function is freed by the runtime. Not guaranteed to trigger.
+    def initialize(name, params, returns, func_proc, user_data: nil, on_free: nil)
       @name = name
-      @args = args
+      @params = params
       @returns = returns
       @func = func_proc
       @user_data = user_data
-    end
-
-    def pointer
-      return @pointer if @pointer
-
-      free = proc { puts 'freeing ' }
-      args = LibExtism.from_int_array(@args)
-      returns = LibExtism.from_int_array(@returns)
-      @pointer = LibExtism.extism_function_new(@name, args, @args.length, returns, @returns.length, c_func, free, nil)
+      @on_free = on_free
     end
 
     private
+
+    # Gets the pointer to this function.
+    # Warning: This should not be used
+    def pointer
+      return @_pointer if @_pointer
+
+      free = @on_free || proc {}
+      args = LibExtism.from_int_array(@params)
+      returns = LibExtism.from_int_array(@returns)
+      @_pointer = LibExtism.extism_function_new(@name, args, @params.length, returns, @returns.length, c_func, free,
+                                                nil)
+    end
 
     def c_func
       @c_func ||= proc do |plugin_ptr, inputs_ptr, inputs_size, outputs_ptr, outputs_size, _data_ptr|
