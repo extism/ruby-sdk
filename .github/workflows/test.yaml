@@ -17,6 +17,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+      - run: |
+          pip install poetry
+          pip install git+https://github.com/extism/cli
+          extism install latest
+      
+      - uses: actions/checkout@v3
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@ec02537da5712d66d4d50a0f33b7eb52773b5ed1
         with:
