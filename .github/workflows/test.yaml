@@ -26,4 +26,6 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
       - name: Run tests
-        run: make test
+        run: |
+          ls -lah /usr/local/lib/*
+          make test
