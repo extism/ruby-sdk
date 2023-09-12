@@ -66,7 +66,22 @@ module Extism
     def return_string(output, bytes)
       mem = alloc(bytes.length)
       memory_ptr(mem).put_bytes(0, bytes)
-      output.value = mem.offset
+      set_return(output, mem.offset)
+    end
+
+    # Sets the return value parameter
+    #
+    # @raise [Extism::Error] if memory block could not be found
+    #
+    # @param output [Extism::Val] The output val from the host function
+    # @param value [Integer | Float] The i32 value
+    def set_return(output, value)
+      case output.type
+      when :i32, :i64, :f32, :f64
+        output.value = value
+      else
+        raise ArgumentError, "Don't know how to set output type #{output.type}"
+      end
     end
 
     private
