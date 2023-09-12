@@ -105,6 +105,7 @@ First let's create our host function which we can do with a proc:
 
 ```ruby
 is_vowel_proc = proc do |current_plugin, inputs, outputs, user_data|
+  puts "Hello From Ruby!"
   input = current_plugin.input_as_string(inputs.first)
   if "aeiouAEIOU".include? input[0]
       current_plugin.return_int(outputs.first, 1)
@@ -123,6 +124,7 @@ We need to pass these imports to the plug-in to create them. All imports of a pl
 # and it returns an i64 which is the 0 or 1 result
 is_vowel = Extism::Function.new('is_vowel', [Extism::ValType::I64], [Extism::ValType::I64], is_vowel_proc)
 plugin = Extism::Plugin.new(host_manifest, functions: [is_vowel])
+# => Hello From Ruby!
 # => {"count": 3, "total": 3}
 ```
 
