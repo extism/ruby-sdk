@@ -14,7 +14,9 @@ jobs:
       with:
         ruby-version: '3.1'
     - name: Build Library and Docs
-      run: make docs
+      run: |
+        make prepare
+        make docs
     - name: Deploy
       if: success()
       uses: crazy-max/ghaction-github-pages@v1
