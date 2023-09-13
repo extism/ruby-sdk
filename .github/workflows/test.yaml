@@ -32,8 +32,8 @@ jobs:
       - name: Move the files because download can't sudo
         run: |
           ls -lah ./
-          sudo mv libextism-so-artifact/libextism.so /usr/local/lib/
-          sudo mv libextism-h-artifact/extism.h /usr/local/include/
+          sudo mv libextism.so /usr/local/lib/
+          sudo mv extism.h /usr/local/include/
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@ec02537da5712d66d4d50a0f33b7eb52773b5ed1
         with:
