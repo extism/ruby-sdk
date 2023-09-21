@@ -130,7 +130,7 @@ CUSTOMER = {
   }
 }
 
-class Environment
+class MyEnvironment
   include Extism::HostEnvironment
 
   # we need to register each import that the plug-in expects and match the Wasm signature
@@ -170,7 +170,7 @@ end
 Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
 
 ```ruby
-env = Environment.new
+env = MyEnvironment.new
 plugin = Extism::Plugin.new(manifest, environment: env)
 ```
 
