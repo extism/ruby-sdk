@@ -33,23 +33,6 @@ class Environment
     email = plugin.input_as_json(inputs[1])
     self.email_args = [customer_id, email]
   end
-
-  # def host_functions
-  #   [
-  #     Extism::Function.new(
-  #       'add_credit',
-  #       [Extism::ValType::I64, Extism::ValType::I64],
-  #       [Extism::ValType::I64],
-  #       method(:add_credit).to_proc
-  #     ),
-  #     Extism::Function.new(
-  #       'send_email',
-  #       [Extism::ValType::I64, Extism::ValType::I64],
-  #       [],
-  #       method(:send_email).to_proc
-  #     )
-  #   ]
-  # end
 end
 
 class TestExtism < Minitest::Test
