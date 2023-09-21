@@ -9,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    needs: prepare
     strategy:
       matrix:
         ruby-version: ['3.1', '3.0', '2.7']
