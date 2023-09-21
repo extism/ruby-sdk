@@ -16,6 +16,7 @@ CUSTOMER = {
 }
 class Environment
   include Extism::HostEnvironment
+
   register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
   register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
 

@@ -47,6 +47,7 @@ plugin = Extism::Plugin.new(manifest)
 
 > **Note**: The schema for this manifest can be found here: https://extism.org/docs/concepts/manifest/
 
+## Calling A Plug-in's Exports
 
 This plug-in was written in C and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using `Extism::Plugin#call`:
 
@@ -85,23 +86,21 @@ plugin.call("count_vowels", "Yellow, World!")
 # => {"count": 4, "total": 4, "vowels": "aeiouAEIOUY"}
 ```
 
-### Host Functions
+## Host Functions
 
-With the features listed above, you can create a very flexible plug-in system. By allowing a user to write their own logic at strategic points in your app, just based on transforming some data, you can add a lot of flexibility to your system. 
+Host functions allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
 
-But eventually, you may want the plug-ins to not just calculate, but to actually perform actions on your system. You could first explore some kind of light DSL for these actions. For example, every call to an export could return a response with some series of "action" objects that the system can perform on the plug-in's behalf. But this will only take you so far and will eventually start to feel like a bad, inflexible programming language. What if the plug-in could just invoke the ruby methods already in your app?
+> *Note*: Host functions can be a complicated topic. Please review this [concept doc](https://extism.org/docs/concepts/host-functions) if you are unsure how they work.
 
-That's where Host Functions come in. Host functions can be a complicated concept. You can think of them like custom syscalls for your plug-in. You can use them to add capabilities to your plug-in through a simple interface.
 
-### Host Functions Example
+### Example
 
-We've created a contrived, but familiar example to illustrate this. Suppose we are a Stripe like payments platform, we have a [series of events](https://stripe.com/docs/api/events/types) which trigger *HTTP Webhooks* to a merchant's system. And we have an [*HTTP API*](https://stripe.com/docs/api) that allows the merchant's system to reach back and perform actions on our system. We will narrow in on one event and one scenario to keep things simple, but you should effectively view it as our exports will have the same interface as our webhooks, and our host functions (our imports), will have the same interface as our HTTP API.
-
+We've created a contrived, but familiar example to illustrate this. Suppose you are a stripe-like payments platform.
 When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-charge.succeeded) event occurs, we will call the `on_charge_succeeded` function on our merchant's plug-in and let them decide what to do with it. Here our merchant has some very specific requirements, if the account has spent more than $100, their currency is USD, and they have no credits on their account, it will add $10 credit to their account and then send them an email.
 
 > *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/store_credit/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
 
-First let's create the manifest for our plug-in like usual:
+First let's create the manifest for our plug-in like usual but load up the store_credit plug-in:
 
 ```ruby
 manifest = {
@@ -111,13 +110,13 @@ manifest = {
 }
 ```
 
-Unlike our original plug-in, this plug-in expects you to provide host functions that satisfy our plug-ins imports.
+But, unlike our original plug-in, this plug-in expects you to provide host functions that satisfy our plug-ins imports.
 
 In the ruby sdk, we have a concept for this call an "host environment". An environment is just an object that responds to `host_functions` and returns an array of `Extism::Function`s. We want to expose two capabilities to our plugin, `add_credit(customer_id, amount)` which adds credit to an account and `send_email(customer_id, email)` which sends them an email.
 
 ```ruby
 
-# This is just for demo purposes but would in
+# This is global is just for demo purposes but would in
 # reality be in a database or something
 CUSTOMER = {
   full_name: 'John Smith',
@@ -132,7 +131,12 @@ CUSTOMER = {
   }
 }
 
-class HostEnvironment
+class Environment
+  include Extism::HostEnvironment
+
+  register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
+  register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
+
   def add_credit(plugin, inputs, outputs, _user_data)
     # add_credit takes a string `customer_id` as the first parameter
     customer_id = plugin.input_as_string(inputs.first)
@@ -159,34 +163,14 @@ class HostEnvironment
 
     # it doesn't return anything
   end
-
-  # We need to return a list of Extism::Functions
-  # for each host function our plug-in needs. This will
-  # contain the name, the Wasm signature, and a ruby proc
-  # to execute when the plug-in invokes it.
-  def host_functions
-    [
-      Extism::Function.new(
-        'add_credit', # name of host function
-        [Extism::ValType::I64, Extism::ValType::I64], # params
-        [Extism::ValType::I64], # returns
-        method(:add_credit).to_proc # ruby implementation as proc
-      ),
-      Extism::Function.new(
-        'send_email',
-        [Extism::ValType::I64, Extism::ValType::I64],
-        [],
-        method(:send_email).to_proc
-      )
-    ]
-  end
 end
 ```
 
 Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
 
 ```ruby
-plugin = Extism::Plugin.new(manifest, environment: HostEnvironment.new)
+env = Environment.new
+plugin = Extism::Plugin.new(manifest, environment: env)
 ```
 
 Now we can invoke the event:

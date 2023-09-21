@@ -23,8 +23,6 @@ module Extism
     def register_import(func_name, parameters, returns)
       import_funcs = class_variable_get(:@@import_funcs)
       import_funcs << [func_name, parameters, returns]
-      # require 'debug'
-      # binding.break
     end
   end
 end
