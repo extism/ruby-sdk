@@ -28,7 +28,7 @@ First you should require `"extism"`:
 require "extism"
 ```
 
-## Creating A Plug-in
+### Creating A Plug-in
 
 The primary concept in Extism is the plug-in. You can think of a plug-in as a code module. It has imports and it has exports. These imports and exports define the interface, or your API. You decide what they are called and typed, and what they do. Then the plug-in developer implements them and you can call them.
 
@@ -47,7 +47,7 @@ plugin = Extism::Plugin.new(manifest)
 
 > **Note**: The schema for this manifest can be found here: https://extism.org/docs/concepts/manifest/
 
-## Calling A Plug-in's Exports
+### Calling A Plug-in's Exports
 
 This plug-in was written in C and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using `Extism::Plugin#call`:
 
@@ -86,14 +86,13 @@ plugin.call("count_vowels", "Yellow, World!")
 # => {"count": 4, "total": 4, "vowels": "aeiouAEIOUY"}
 ```
 
-## Host Functions
+### Host Functions
 
 Host functions allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
 
 > *Note*: Host functions can be a complicated topic. Please review this [concept doc](https://extism.org/docs/concepts/host-functions) if you are unsure how they work.
 
-
-### Example
+### Host Functions Example
 
 We've created a contrived, but familiar example to illustrate this. Suppose you are a stripe-like payments platform.
 When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-charge.succeeded) event occurs, we will call the `on_charge_succeeded` function on our merchant's plug-in and let them decide what to do with it. Here our merchant has some very specific requirements, if the account has spent more than $100, their currency is USD, and they have no credits on their account, it will add $10 credit to their account and then send them an email.
