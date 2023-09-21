@@ -133,6 +133,8 @@ CUSTOMER = {
 class Environment
   include Extism::HostEnvironment
 
+  # we need to register each import that the plug-in expects and match the Wasm signature
+  # register_import takes the name, the param types, and the return types
   register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
   register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
 
