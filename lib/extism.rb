@@ -5,6 +5,7 @@ require_relative './extism/plugin'
 require_relative './extism/current_plugin'
 require_relative './extism/libextism'
 require_relative './extism/wasm'
+require_relative './extism/host_environment'
 
 module Extism
   class Error < StandardError

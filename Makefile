@@ -31,3 +31,9 @@ docs:
 
 show-docs: docs
 	open doc/index.html
+
+seed:
+	curl -L https://github.com/extism/plugins/releases/latest/download/count_vowels.debug.wasm > wasm/count_vowels.wasm
+	curl -L https://github.com/extism/plugins/releases/latest/download/reflect.debug.wasm > wasm/reflect.wasm
+	curl -L https://github.com/extism/plugins/releases/latest/download/store_credit.debug.wasm > wasm/store_credit.wasm
+

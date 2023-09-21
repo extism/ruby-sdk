@@ -77,7 +77,7 @@ module Extism
     #
     # @param output [Extism::Val] The output val from the host function
     # @param bytes [String] The bytes to set
-    def return_string(output, bytes)
+    def output_string(output, bytes)
       mem = alloc(bytes.length)
       memory_ptr(mem).put_bytes(0, bytes)
       set_return(output, mem.offset)
@@ -89,7 +89,7 @@ module Extism
     #
     # @param output [Extism::Val] The output val from the host function
     # @param obj [Hash] The hash object to turn to JSON
-    def return_json(output, obj)
+    def output_json(output, obj)
       bytes = JSON.generate(obj)
       mem = alloc(bytes.length)
       memory_ptr(mem).put_bytes(0, bytes)
