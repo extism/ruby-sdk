@@ -57,6 +57,20 @@ module Extism
       memory_ptr(mem).read_bytes(mem.len)
     end
 
+    # Gets the input as a string
+    #
+    # @raise [Extism::Error] if memory block could not be found
+    #
+    # @param input [Extism::Val] The input val from the host function
+    # @return [Hash] The Hash object
+    def input_as_json(input)
+      raise ArgumentError, 'input is not an Extism::Val' unless input.instance_of? Extism::Val
+
+      mem = memory_at_offset(input.value)
+      str = memory_ptr(mem).read_bytes(mem.len)
+      JSON.parse(str)
+    end
+
     # Sets string to the return of the host function
     #
     # @raise [Extism::Error] if memory block could not be found
@@ -64,6 +78,19 @@ module Extism
     # @param output [Extism::Val] The output val from the host function
     # @param bytes [String] The bytes to set
     def return_string(output, bytes)
+      mem = alloc(bytes.length)
+      memory_ptr(mem).put_bytes(0, bytes)
+      set_return(output, mem.offset)
+    end
+
+    # Sets json to the return of the host function
+    #
+    # @raise [Extism::Error] if memory block could not be found
+    #
+    # @param output [Extism::Val] The output val from the host function
+    # @param obj [Hash] The hash object to turn to JSON
+    def return_json(output, obj)
+      bytes = JSON.generate(obj)
       mem = alloc(bytes.length)
       memory_ptr(mem).put_bytes(0, bytes)
       set_return(output, mem.offset)

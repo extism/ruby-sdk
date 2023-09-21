@@ -7,11 +7,18 @@ module Extism
     # @param wasm [Hash, String] The manifest as a Hash or WASM binary as a String. See https://extism.org/docs/concepts/manifest/.
     # @param wasi [Boolean] Enable WASI support
     # @param config [Hash] The plugin config
-    def initialize(wasm, functions: [], wasi: false, config: nil)
+    def initialize(wasm, environment: nil, functions: [], wasi: false, config: nil)
       wasm = JSON.generate(wasm) if wasm.instance_of?(Hash)
       code = FFI::MemoryPointer.new(:char, wasm.bytesize)
       errmsg = FFI::MemoryPointer.new(:pointer)
       code.put_bytes(0, wasm)
+      if functions.empty? && environment
+        unless environment.respond_to?(:host_functions)
+          raise ArgumentError 'environment should implement host_functions method'
+        end
+
+        functions = environment.host_functions
+      end
       funcs_ptr = FFI::MemoryPointer.new(LibExtism::ExtismFunction)
       funcs_ptr.write_array_of_pointer(functions.map { |f| f.send(:pointer) })
       @plugin = LibExtism.extism_plugin_new(code, wasm.bytesize, funcs_ptr, functions.length, wasi, errmsg)

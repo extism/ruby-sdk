@@ -24,7 +24,7 @@ gem install extism
 
 First you should require `"extism"`:
 
-```
+```ruby
 require "extism"
 ```
 
@@ -39,7 +39,7 @@ For simplicity let's load one from the web:
 ```ruby
 manifest = {
   wasm: [
-    { url: "https://raw.githubusercontent.com/extism/extism/main/wasm/code.wasm" }
+    { url: "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm" }
   ]
 }
 plugin = Extism::Plugin.new(manifest)
@@ -50,7 +50,7 @@ plugin = Extism::Plugin.new(manifest)
 
 This plug-in was written in C and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using `Extism::Plugin#call`:
 
-```
+```ruby
 plugin.call("count_vowels", "Hello, World!")
 # => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
 ```
@@ -62,7 +62,7 @@ All exports have a simple interface of optional bytes in, and optional bytes out
 
 Plug-ins may be stateful or stateless. Plug-ins can maintain state b/w calls by the use of variables. Our count vowels plug-in remembers the total number of vowels it's ever counted in the "total" key in the result. You can see this by making subsequent calls to the export:
 
-```
+```ruby
 plugin.call("count_vowels", "Hello, World!")
 # => {"count": 3, "total": 6, "vowels": "aeiouAEIOU"}
 plugin.call("count_vowels", "Hello, World!")
@@ -75,7 +75,7 @@ These variables will persist until this plug-in is freed or you initialize a new
 
 Plug-ins may optionally take a configuration object. This is a static way to configure the plug-in. Our count-vowels plugin takes an optional configuration to change out which characters are considered vowels. Example:
 
-```
+```ruby
 plugin = Extism::Plugin.new(manifest)
 plugin.call("count_vowels", "Yellow, World!")
 # => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
@@ -87,47 +87,122 @@ plugin.call("count_vowels", "Yellow, World!")
 
 ### Host Functions
 
-Host functions can be a complicated concept. You can think of them like custom syscalls for your plug-in. You can use them to add capabilities to your plug-in through a simple interface.
+With the features listed above, you can create a very flexible plug-in system. By allowing a user to write their own logic at strategic points in your app, just based on transforming some data, you can add a lot of flexibility to your system. 
 
-Another way to look at it is this: Up until now we've only invoked functions given to us by our plug-in, but what if our plug-in needs to invoke a function in our ruby app? Host functions allow you to do this by passing a reference to a ruby method to the plug-in.
+But eventually, you may want the plug-ins to not just calculate, but to actually perform actions on your system. You could first explore some kind of light DSL for these actions. For example, every call to an export could return a response with some series of "action" objects that the system can perform on the plug-in's behalf. But this will only take you so far and will eventually start to feel like a bad, inflexible programming language. What if the plug-in could just invoke the ruby methods already in your app?
 
-Let's load up a version of count vowels with a host function:
+That's where Host Functions come in. Host functions can be a complicated concept. You can think of them like custom syscalls for your plug-in. You can use them to add capabilities to your plug-in through a simple interface.
+
+### Host Functions Example
+
+We've created a contrived, but familiar example to illustrate this. Suppose we are a Stripe like payments platform, we have a [series of events](https://stripe.com/docs/api/events/types) which trigger *HTTP Webhooks* to a merchant's system. And we have an [*HTTP API*](https://stripe.com/docs/api) that allows the merchant's system to reach back and perform actions on our system. We will narrow in on one event and one scenario to keep things simple, but you should effectively view it as our exports will have the same interface as our webhooks, and our host functions (our imports), will have the same interface as our HTTP API.
+
+When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-charge.succeeded) event occurs, we will call the `on_charge_succeeded` function on our merchant's plug-in and let them decide what to do with it. Here our merchant has some very specific requirements, if the account has spent more than $100, their currency is USD, and they have no credits on their account, it will add $10 credit to their account and then send them an email.
+
+> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/store_credit/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
+
+First let's create the manifest for our plug-in like usual:
 
 ```ruby
 manifest = {
   wasm: [
-    { url: "https://raw.githubusercontent.com/extism/extism/main/wasm/count-vowels-host.wasm" }
+    { url: "https://github.com/extism/plugins/releases/latest/download/store_credit.wasm" }
   ]
 }
-plugin = Extism::Plugin.new(manifest)
 ```
 
-Unlike our original plug-in, this plug-in expects you to provide your own implementation of "is_vowel" in ruby.
-First let's create our host function which we can do with a proc:
+Unlike our original plug-in, this plug-in expects you to provide host functions that satisfy our plug-ins imports.
+
+In the ruby sdk, we have a concept for this call an "host environment". An environment is just an object that responds to `host_functions` and returns an array of `Extism::Function`s. We want to expose two capabilities to our plugin, `add_credit(customer_id, amount)` which adds credit to an account and `send_email(customer_id, email)` which sends them an email.
 
 ```ruby
-is_vowel_proc = proc do |current_plugin, inputs, outputs, user_data|
-  puts "Hello From Ruby!"
-  input = current_plugin.input_as_string(inputs.first)
-  if "aeiouAEIOU".include? input[0]
-      current_plugin.return_int(outputs.first, 1)
-  else
-      current_plugin.return_int(outputs.first, 0)
+
+# This is just for demo purposes but would in
+# reality be in a database or something
+CUSTOMER = {
+  full_name: 'John Smith',
+  customer_id: 'abcd1234',
+  total_spend: {
+    currency: 'USD',
+    amount_in_cents: 20_000
+  },
+  credit: {
+    currency: 'USD',
+    amount_in_cents: 0
+  }
+}
+
+class HostEnvironment
+  def add_credit(plugin, inputs, outputs, _user_data)
+    # add_credit takes a string `customer_id` as the first parameter
+    customer_id = plugin.input_as_string(inputs.first)
+    # it takes an object `amount` { amount_in_cents: int, currency: string } as the second parameter
+    amount = plugin.input_as_json(inputs[1])
+
+    # we're just going to print it out and add to the CUSTOMER global
+    puts "Adding Credit #{amount} to customer #{customer_id}"
+    CUSTOMER[:credit][:amount_in_cents] += amount['amount_in_cents']
+
+    # add_credit returns a Json object with the new customer details
+    plugin.return_json(outputs.first, CUSTOMER)
+  end
+
+  def send_email(plugin, inputs, _outputs, _user_data)
+    # send_email takes a string `customer_id` as the first parameter
+    customer_id = plugin.input_as_string(inputs.first)
+    # it takes an object `email` { subject: string, body: string } as the second parameter
+    email = plugin.input_as_json(inputs[1])
+
+    # we'll just print it but you could imagine we'd put something 
+    # in a database or call an internal api to send this email
+    puts "Sending email #{email} to customer #{customer_id}"
+
+    # it doesn't return anything
+  end
+
+  # We need to return a list of Extism::Functions
+  # for each host function our plug-in needs. This will
+  # contain the name, the Wasm signature, and a ruby proc
+  # to execute when the plug-in invokes it.
+  def host_functions
+    [
+      Extism::Function.new(
+        'add_credit', # name of host function
+        [Extism::ValType::I64, Extism::ValType::I64], # params
+        [Extism::ValType::I64], # returns
+        method(:add_credit).to_proc # ruby implementation as proc
+      ),
+      Extism::Function.new(
+        'send_email',
+        [Extism::ValType::I64, Extism::ValType::I64],
+        [],
+        method(:send_email).to_proc
+      )
+    ]
   end
 end
 ```
 
-This proc will be exposed to the plug-in in it's native language. We need to know the inputs and outputs and their types ahead of time. This function expects a string (single character) as the first input and expects a 0 (false) or 1 (true) in the output (returns).
-
-We need to pass these imports to the plug-in to create them. All imports of a plug-in must be satisfied for it to be initialized:
+Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
 
 ```ruby
-# we need to give it the Wasm signature, it takes one i64 as input which acts as a pointer to a string
-# and it returns an i64 which is the 0 or 1 result
-is_vowel = Extism::Function.new('is_vowel', [Extism::ValType::I64], [Extism::ValType::I64], is_vowel_proc)
-plugin = Extism::Plugin.new(host_manifest, functions: [is_vowel])
-# => Hello From Ruby!
-# => {"count": 3, "total": 3}
+plugin = Extism::Plugin.new(manifest, environment: HostEnvironment.new)
 ```
 
-Although this is a trivial example, you could imagine some more elaborate APIs for host functions. This is truly how you unleash the power of the plugin. You could, for example, imagine giving the plug-in access to APIs your app normally has like reading from a database, authenticating a user, sending messages, etc.
+Now we can invoke the event:
+
+```ruby
+event = {
+  event_type: 'charge.succeeded',
+  customer: CUSTOMER
+}
+result = plugin.call('on_charge_succeeded', JSON.generate(event))
+```
+
+This will print:
+
+```
+Adding Credit {"amount_in_cents"=>1000, "currency"=>"USD"} for customer abcd1234
+Sending email {"subject"=>"A gift for you John Smith", "body"=>"You have received $10 in store credi
+t!"} to customer abcd1234
+```
