@@ -11,13 +11,13 @@ You first need to [install the Extism runtime](https://extism.org/docs/install).
 Add this library to your [Gemfile](https://bundler.io/):
 
 ```ruby
-gem 'extism', '1.0.0-rc.1'
+gem 'extism', '1.0.0.pre.rc.1'
 ```
 
 Or if installing on the system level:
 
 ```
-gem install extism
+gem install extism --pre
 ```
 
 ## Getting Started
