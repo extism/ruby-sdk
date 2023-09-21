@@ -99,7 +99,7 @@ When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-c
 
 > *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/store_credit/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
 
-First let's create the manifest for our plug-in like usual but load up the store_credit plug-in:
+First let's create the manifest for our plug-in like usual but load up the `store_credit` plug-in:
 
 ```ruby
 manifest = {
@@ -109,7 +109,7 @@ manifest = {
 }
 ```
 
-But, unlike our original plug-in, this plug-in expects you to provide host functions that satisfy our plug-ins imports.
+But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports.
 
 In the ruby sdk, we have a concept for this call an "host environment". An environment is just an object that responds to `host_functions` and returns an array of `Extism::Function`s. We want to expose two capabilities to our plugin, `add_credit(customer_id, amount)` which adds credit to an account and `send_email(customer_id, email)` which sends them an email.
 
