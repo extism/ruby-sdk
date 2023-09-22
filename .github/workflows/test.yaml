@@ -7,33 +7,14 @@ on:
     branches: [ main ]
 
 jobs:
-  prepare:
-    name: Install Extism Runtime
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/libextism
   test:
     runs-on: ubuntu-latest
-    needs: prepare
     strategy:
       matrix:
         ruby-version: ['3.1', '3.0', '2.7']
     steps:
       - uses: actions/checkout@v3
-      - name: Download libextism.so
-        uses: actions/download-artifact@v2
-        with:
-          name: libextism-so-artifact
-      - name: Download libextism.h
-        uses: actions/download-artifact@v2
-        with:
-          name: libextism-h-artifact
-      - name: Move the files because download can't sudo
-        run: |
-          ls -lah ./
-          sudo mv libextism.so /usr/local/lib/
-          sudo mv extism.h /usr/local/include/
+      - uses: ./.github/actions/libextism
       - name: Set up Ruby ${{ matrix.ruby-version }}
         uses: ruby/setup-ruby@ec02537da5712d66d4d50a0f33b7eb52773b5ed1
         with:
