@@ -8,6 +8,8 @@ This repo houses the ruby gem for integrating with the [Extism](https://extism.o
 
 You first need to [install the Extism runtime](https://extism.org/docs/install).
 
+> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`
+
 Add this library to your [Gemfile](https://bundler.io/):
 
 ```ruby
