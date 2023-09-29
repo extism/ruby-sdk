@@ -14,7 +14,7 @@ You first need to install the Extism Runtime which is a native shared object tha
 sudo extism lib install latest
 
 #=> Fetching https://github.com/extism/extism/releases/download/v0.5.2/libextism-aarch64-apple-darwin-v0.5.2.tar.gz
-# => Copying libextism.dylib to /usr/local/lib/libextism.dylib
+#=> Copying libextism.dylib to /usr/local/lib/libextism.dylib
 #=> Copying extism.h to /usr/local/include/extism.h
 ```
 
