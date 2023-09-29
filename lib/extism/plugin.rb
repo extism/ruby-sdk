@@ -4,13 +4,19 @@ module Extism
   class Plugin
     # Intialize a plugin
     #
-    # @example
+    # @example Initialize a plugin from a url
     #   manifest = {
     #     wasm: [
     #       { url: "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm" }
     #     ]
     #   }
     #   plugin = Extism::Plugin.new(manifest)
+    #
+    # @example Pass a config object to configure the plug-in
+    #   plugin = Extism::Plugin.new(manifest, config: { hello: "world" })
+    #
+    # @example Initalize a plug-in that needs WASI
+    #   plugin = Extism::Plugin.new(manifest, wasi: true)
     #
     # @param wasm [Hash, String] The manifest as a Hash or WASM binary as a String. See https://extism.org/docs/concepts/manifest/.
     # @param wasi [Boolean] Enable WASI support
