@@ -16,15 +16,15 @@ module Extism
 
     # Allocates a memory block in the plugin
     #
-    # @example
+    # @example Allocate 1kB
     #   mem = current_plugin.alloc(1_024)
     #   current_plugin.free(mem)
     #
-    # @param amount [Integer] The amount in bytes to allocate
+    # @param num_bytes [Integer] The amount in bytes to allocate
     # @return [Extism::Memory] The reference to the freshly allocated memory
-    def alloc(amount)
-      offset = LibExtism.extism_current_plugin_memory_alloc(@ptr, amount)
-      Memory.new(offset, amount)
+    def alloc(num_bytes)
+      offset = LibExtism.extism_current_plugin_memory_alloc(@ptr, num_bytes)
+      Memory.new(offset, num_bytes)
     end
 
     # Frees the memory block
