@@ -6,9 +6,22 @@ This repo houses the ruby gem for integrating with the [Extism](https://extism.o
 
 ## Installation
 
-You first need to [install the Extism runtime](https://extism.org/docs/install).
+### Install the Extism Runtime
+
+You first need to install the Extism Runtime which is a native shared object that this library uses to load and run the Wasm code. You can pull the runtime down directly or use the [Extism CLI](https://github.com/extism/cli) to install it:
+
+```bash
+sudo extism lib install latest
+
+#=> Fetching https://github.com/extism/extism/releases/download/v0.5.2/libextism-aarch64-apple-darwin-v0
+.5.2.tar.gz
+# => Copying libextism.dylib to /usr/local/lib/libextism.dylib
+#=> Copying extism.h to /usr/local/include/extism.h
+```
 
 > **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`
+
+### Install the Rubygem
 
 Add this library to your [Gemfile](https://bundler.io/):
 
@@ -32,11 +45,9 @@ require "extism"
 
 ### Creating A Plug-in
 
-The primary concept in Extism is the plug-in. You can think of a plug-in as a code module. It has imports and it has exports. These imports and exports define the interface, or your API. You decide what they are called and typed, and what they do. Then the plug-in developer implements them and you can call them.
+The primary concept in Extism is the plug-in. You can think of a plug-in as a code module stored in a `.wasm` file. You can [learn more about plug-ins here](https://extism.org/concepts/plug-in).
 
-The code for a plug-in exist as a binary wasm module. We can load this with the raw bytes or we can use the manifest to tell Extism how to load it from disk or the web.
-
-For simplicity let's load one from the web:
+You'll generally load the plug-in from disk, but for simplicity let's load a pre-built demo plug-in from the web:
 
 ```ruby
 manifest = {
@@ -47,11 +58,11 @@ manifest = {
 plugin = Extism::Plugin.new(manifest)
 ```
 
-> **Note**: The schema for this manifest can be found here: https://extism.org/docs/concepts/manifest/
+> **Note**: The schema for this manifest can be found here: [https://extism.org/docs/concepts/manifest/](https://extism.org/docs/concepts/manifest/)
 
 ### Calling A Plug-in's Exports
 
-This plug-in was written in C and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using `Extism::Plugin#call`:
+This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using [Extism::Plugin#call](https://extism.github.io/ruby-sdk/Extism/Plugin.html#call-instance_method):
 
 ```ruby
 plugin.call("count_vowels", "Hello, World!")
@@ -59,7 +70,6 @@ plugin.call("count_vowels", "Hello, World!")
 ```
 
 All exports have a simple interface of optional bytes in, and optional bytes out. This plug-in happens to take a string and return a JSON encoded string with a report of results.
-
 
 ### Plug-in State
 
