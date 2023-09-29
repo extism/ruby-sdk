@@ -36,6 +36,8 @@ gem install extism --pre
 
 ## Getting Started
 
+> *Note*: You should be able to follow this guide by copy pasting the code into `irb`.
+
 First you should require `"extism"`:
 
 ```ruby
