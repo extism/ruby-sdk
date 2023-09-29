@@ -18,7 +18,7 @@ module Extism
     #
     # @example
     #   mem = current_plugin.alloc(1_024)
-    #   mem.put_bytes(0, "Hello, World!")
+    #   current_plugin.free(mem)
     #
     # @param amount [Integer] The amount in bytes to allocate
     # @return [Extism::Memory] The reference to the freshly allocated memory
@@ -142,7 +142,7 @@ module Extism
     private
 
     # Returns a raw pointer (absolute to the host) to the given memory block
-    # Be careful with this. it's not exposed for a reason.
+    # **Danger**: Be careful with this. it's not exposed for a reason.
     # This is a pointer in host memory so it could read outside of the plugin
     # if manipulated
     def memory_ptr(mem)

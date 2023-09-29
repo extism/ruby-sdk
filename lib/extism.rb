@@ -34,5 +34,15 @@ module Extism
     end
   }
 
-  Memory = Struct.new(:offset, :len)
+  # Represents a "block" of memory in Extism.
+  # This memory is in the communication buffer b/w the
+  # guest in the host and technically lives in host memory.
+  class Memory
+    attr_reader :offset, :len
+
+    def initialize(offset, len)
+      @offset = offset
+      @len = len
+    end
+  end
 end

@@ -1,4 +1,9 @@
 module Extism
+  # Extism specific values for Wasm types. Useful when you need to describe
+  # something in pure wasm like host function signatures.
+  #
+  # @example
+  #   register_import :hostfunc, [Extism::ValType::I32, Extism::ValType::F64], [Extism::ValType::I64]
   module ValType
     I32 = 0
     I64 = 1
@@ -9,6 +14,7 @@ module Extism
     EXTERN_REF = 6
   end
 
+  # A raw Wasm value. Contains the type and the data
   class Val
     def initialize(ptr)
       @c_val = LibExtism::ExtismVal.new(ptr)
@@ -50,7 +56,10 @@ module Extism
     end
   end
 
-  # Represents a host function
+  # Represents a host function. This is mostly for internal use and you should
+  # try to use HostEnvironment instead
+  #
+  # @see Extism::HostEnvironment
   class Function
     # Create a new host function
     #

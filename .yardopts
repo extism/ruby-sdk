@@ -1,1 +1,2 @@
 --readme README.md
+--exclude lib/extism/libextism.rb

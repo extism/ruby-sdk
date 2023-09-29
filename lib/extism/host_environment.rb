@@ -33,12 +33,21 @@ module Extism
         )
       end
     end
-  end
 
-  module ClassMethods
-    def register_import(func_name, parameters, returns)
-      import_funcs = class_variable_get(:@@import_funcs)
-      import_funcs << [func_name, parameters, returns]
+    module ClassMethods
+      # Register an import by name. You must know the wasm signature
+      # of the function to do this.
+      #
+      # @example
+      #   register_import :my_func, [Extism::ValType::I64], [Extism::ValType::F64]
+      #
+      # @param func_name [Symbol | String] The name of the wasm import function. Assumes `env` namespace.
+      # @param parameters [Array<Extism::ValType>] The Wasm types of the parameters that the import takes
+      # @param returns [Array<Extism::ValType>] The Wasm types of the returns that the import returns. Will usually be just be one of these.
+      def register_import(func_name, parameters, returns)
+        import_funcs = class_variable_get(:@@import_funcs)
+        import_funcs << [func_name, parameters, returns]
+      end
     end
   end
 end
