@@ -182,7 +182,7 @@ class MyEnvironment
 end
 ```
 
-> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/doc/Extism/CurrentPlugin.html) class.
+> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class.
 
 Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
 
