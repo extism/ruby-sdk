@@ -8,7 +8,7 @@ This repo houses the ruby gem for integrating with the [Extism](https://extism.o
 
 ### Install the Extism Runtime
 
-You first need to install the Extism Runtime which is a native shared object that this library uses to load and run the Wasm code. You can pull the runtime down directly or use the [Extism CLI](https://github.com/extism/cli) to install it:
+You first need to install the Extism Runtime which is a native shared object that this library uses to load and run the Wasm code. You can [download the shared library directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
 
 ```bash
 sudo extism lib install latest
