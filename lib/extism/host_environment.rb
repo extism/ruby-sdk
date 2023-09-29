@@ -21,6 +21,12 @@ module Extism
       base.class_variable_set(:@@import_funcs, [])
     end
 
+    # Creates the host functions to pass to the plug-in on intialization.
+    # Used internally by the Plugin initializer
+    #
+    # @see Extism::Plugin::new
+    #
+    # @returns [Array<Extism::Function>]
     def host_functions
       import_funcs = self.class.class_variable_get(:@@import_funcs)
       import_funcs.map do |f|
