@@ -1,4 +1,20 @@
 module Extism
+  # Represents an "environment" that can be imported to a plug-in
+  #
+  # @example
+  #   class MyEnvironment
+  #     include Extism::HostEnvironment
+  #     # we need to register each import that the plug-in expects and match the Wasm signature
+  #     # register_import takes the name, the param types, and the return types
+  #     register_import :reflect, [Extism::ValType::I64], [Extism::ValType::I64]
+  #
+  #     # reflect just takes a string from the plug-in and reflects it back in return
+  #     def reflect(plugin, inputs, outputs, _user_data)
+  #       msg = plugin.input_as_string(inputs.first)
+  #       plugin.output_string(outputs.first, msg)
+  #     end
+  #   end
+  #
   module HostEnvironment
     def self.included(base)
       base.extend ClassMethods

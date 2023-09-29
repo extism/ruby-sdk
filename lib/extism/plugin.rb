@@ -4,6 +4,14 @@ module Extism
   class Plugin
     # Intialize a plugin
     #
+    # @example
+    #   manifest = {
+    #     wasm: [
+    #       { url: "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm" }
+    #     ]
+    #   }
+    #   plugin = Extism::Plugin.new(manifest)
+    #
     # @param wasm [Hash, String] The manifest as a Hash or WASM binary as a String. See https://extism.org/docs/concepts/manifest/.
     # @param wasi [Boolean] Enable WASI support
     # @param config [Hash] The plugin config
@@ -45,6 +53,11 @@ module Extism
     end
 
     # Call a function by name
+    #
+    # @example
+    #   input = JSON.generate({hello: "world"})
+    #   result = plugin.call("my_func", input)
+    #   output = JSON.parse(result)
     #
     # @param name [String] The function name
     # @param data [String] The input data for the function

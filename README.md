@@ -25,7 +25,7 @@ sudo extism lib install latest
 Add this library to your [Gemfile](https://bundler.io/):
 
 ```ruby
-gem 'extism', '1.0.0.pre.rc.1'
+gem 'extism', '1.0.0.pre.rc.2'
 ```
 
 Or if installing on the system level:

@@ -16,6 +16,10 @@ module Extism
 
     # Allocates a memory block in the plugin
     #
+    # @example
+    #   mem = current_plugin.alloc(1_024)
+    #   mem.put_bytes(0, "Hello, World!")
+    #
     # @param amount [Integer] The amount in bytes to allocate
     # @return [Extism::Memory] The reference to the freshly allocated memory
     def alloc(amount)
@@ -25,13 +29,21 @@ module Extism
 
     # Frees the memory block
     #
+    # @example
+    #   mem = current_plugin.alloc(1_024)
+    #   current_plugin.free(mem)
+    #
     # @param memory [Extism::Memory] The memory object you wish to free
     # @return [Extism::Memory] The reference to the freshly allocated memory
     def free(memory)
       LibExtism.extism_current_plugin_memory_free(@ptr, memory.offset)
     end
 
-    # Gets the memory block at a given offset
+    # Gets the memory block at a given offset. Note: try to use input_* and output_* methods where possible.
+    #
+    # @example
+    #   mem = current_plugin.memory_at_offset(123456789)
+    #   current_plugin.free(mem)
     #
     # @raise [Extism::Error] if memory block could not be found
     #
@@ -48,6 +60,10 @@ module Extism
     #
     # @raise [Extism::Error] if memory block could not be found
     #
+    # @example
+    #   param1 = current_plugin.input_as_string(inputs.first)
+    #   raise "Failed" unless param1 == "First param from plug-in host function call"
+    #
     # @param input [Extism::Val] The input val from the host function
     # @return [String] raw bytes as a string
     def input_as_string(input)
@@ -57,9 +73,13 @@ module Extism
       memory_ptr(mem).read_bytes(mem.len)
     end
 
-    # Gets the input as a string
+    # Gets the input as a JSON parsed Hash
     #
     # @raise [Extism::Error] if memory block could not be found
+    #
+    # @example
+    #   param1 = current_plugin.input_as_json(inputs.first)
+    #   raise "Failed" unless param1 == {hello: "world"}
     #
     # @param input [Extism::Val] The input val from the host function
     # @return [Hash] The Hash object
@@ -73,6 +93,10 @@ module Extism
 
     # Sets string to the return of the host function
     #
+    # @example
+    #   msg = "A string returned from the host function"
+    #   current_plugin.output_string(outputs.first, msg)
+    #
     # @raise [Extism::Error] if memory block could not be found
     #
     # @param output [Extism::Val] The output val from the host function
@@ -84,6 +108,10 @@ module Extism
     end
 
     # Sets json to the return of the host function
+    #
+    # @example
+    #   msg = {hello: "world"}
+    #   current_plugin.output_json(outputs.first, msg)
     #
     # @raise [Extism::Error] if memory block could not be found
     #
