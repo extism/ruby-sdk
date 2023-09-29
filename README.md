@@ -1,8 +1,8 @@
 # Extism Ruby Host SDK
 
-> **Note**: This houses the 1.0 version of the Ruby SDK and is a work in progress. Please use the ruby SDK in [extism/extism](https://github.com/extism/extism/tree/main/ruby) until we hit 1.0.
+This repo houses the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby applications to run Extism plug-ins.
 
-This repo houses the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby applications to run Extism plugins.
+> **Note**: This repo is 1.0 alpha version of the Ruby SDK and is a work in progress. We'd love any feedback you have on it, but consider using the supported ruby SDK in [extism/extism](https://github.com/extism/extism/tree/main/ruby) until we hit 1.0.
 
 ## Installation
 
