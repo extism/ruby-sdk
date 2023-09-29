@@ -51,15 +51,12 @@ The primary concept in Extism is the plug-in. You can think of a plug-in as a co
 You'll generally load the plug-in from disk, but for simplicity let's load a pre-built demo plug-in from the web:
 
 ```ruby
-manifest = {
-  wasm: [
-    { url: "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm" }
-  ]
-}
+url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm"
+manifest = Extism::Manifest.from_url
 plugin = Extism::Plugin.new(manifest)
 ```
 
-> **Note**: The schema for this manifest can be found here: [https://extism.org/docs/concepts/manifest/](https://extism.org/docs/concepts/manifest/)
+> **Note**: See [the Manifest docs](https://extism.github.io/ruby-sdk/Extism/Manifest.html) as it has a rich schema and a lot of options.
 
 ### Calling A Plug-in's Exports
 
@@ -115,11 +112,8 @@ When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-c
 First let's create the manifest for our plug-in like usual but load up the `store_credit` plug-in:
 
 ```ruby
-manifest = {
-  wasm: [
-    { url: "https://github.com/extism/plugins/releases/latest/download/store_credit.wasm" }
-  ]
-}
+url = "https://github.com/extism/plugins/releases/latest/download/store_credit.wasm"
+manifest = Extism::Manifest.from_url(url)
 ```
 
 But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports.

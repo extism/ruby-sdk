@@ -14,6 +14,7 @@ CUSTOMER = {
     amount_in_cents: 0
   }
 }
+
 class Environment
   include Extism::HostEnvironment
 
@@ -107,32 +108,14 @@ class TestExtism < Minitest::Test
   private
 
   def vowels_manifest
-    {
-      wasm: [
-        {
-          path: File.join(__dir__, '../wasm/count_vowels.wasm')
-        }
-      ]
-    }
+    Extism::Manifest.from_path File.join(__dir__, '../wasm/count_vowels.wasm')
   end
 
   def reflect_manifest
-    {
-      wasm: [
-        {
-          path: File.join(__dir__, '../wasm/reflect.wasm')
-        }
-      ]
-    }
+    Extism::Manifest.from_path File.join(__dir__, '../wasm/reflect.wasm')
   end
 
   def store_credit_manifest
-    {
-      wasm: [
-        {
-          path: File.join(__dir__, '../wasm/store_credit.wasm')
-        }
-      ]
-    }
+    Extism::Manifest.from_path File.join(__dir__, '../wasm/store_credit.wasm')
   end
 end

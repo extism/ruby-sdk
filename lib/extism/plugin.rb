@@ -5,11 +5,7 @@ module Extism
     # Intialize a plugin
     #
     # @example Initialize a plugin from a url
-    #   manifest = {
-    #     wasm: [
-    #       { url: "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm" }
-    #     ]
-    #   }
+    #   manifest = Extism::Manifest.from_url "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm"
     #   plugin = Extism::Plugin.new(manifest)
     #
     # @example Pass a config object to configure the plug-in
@@ -18,11 +14,19 @@ module Extism
     # @example Initalize a plug-in that needs WASI
     #   plugin = Extism::Plugin.new(manifest, wasi: true)
     #
-    # @param wasm [Hash, String] The manifest as a Hash or WASM binary as a String. See https://extism.org/docs/concepts/manifest/.
+    # @param wasm [Hash, String, Manifest] The manifest as a Hash or WASM binary as a String. See https://extism.org/docs/concepts/manifest/.
     # @param wasi [Boolean] Enable WASI support
     # @param config [Hash] The plugin config
     def initialize(wasm, environment: nil, functions: [], wasi: false, config: nil)
-      wasm = JSON.generate(wasm) if wasm.instance_of?(Hash)
+      wasm = case wasm
+             when Hash
+               JSON.generate(wasm)
+             when Manifest
+               JSON.generate(wasm.manifest_data)
+             else
+               wasm
+             end
+
       code = FFI::MemoryPointer.new(:char, wasm.bytesize)
       errmsg = FFI::MemoryPointer.new(:pointer)
       code.put_bytes(0, wasm)

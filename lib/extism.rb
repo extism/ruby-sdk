@@ -1,5 +1,6 @@
 require 'ffi'
 require 'json'
+require_relative './extism/manifest'
 require_relative './extism/version'
 require_relative './extism/plugin'
 require_relative './extism/current_plugin'
