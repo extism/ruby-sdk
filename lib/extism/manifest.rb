@@ -1,4 +1,9 @@
 module Extism
+  # The manifest represents a recipe to build a plug-in.
+  # It generally consists of a path to one wasm module
+  # but could contain more. It also helps you define some
+  # options and restrictions on the runtime behavior of the plug-in.
+  # See https://extism.org/docs/concepts/manifest for more info.
   class Manifest
     attr_reader :manifest_data
 
