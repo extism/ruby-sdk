@@ -26,7 +26,7 @@ module Extism
     #
     # @see Extism::Plugin::new
     #
-    # @returns [Array<Extism::Function>]
+    # @return [Array<Extism::Function>]
     def host_functions
       import_funcs = self.class.class_variable_get(:@@import_funcs)
       import_funcs.map do |f|
@@ -47,9 +47,9 @@ module Extism
       # @example
       #   register_import :my_func, [Extism::ValType::I64], [Extism::ValType::F64]
       #
-      # @param func_name [Symbol | String] The name of the wasm import function. Assumes `env` namespace.
-      # @param parameters [Array<Extism::ValType>] The Wasm types of the parameters that the import takes
-      # @param returns [Array<Extism::ValType>] The Wasm types of the returns that the import returns. Will usually be just be one of these.
+      # @param [Symbol | String] func_name The name of the wasm import function. Assumes `env` namespace.
+      # @param [Array<Extism::ValType>] parameters The Wasm types of the parameters that the import takes
+      # @param [Array<Extism::ValType>] returns The Wasm types of the returns that the import returns. Will usually be just be one of these.
       def register_import(func_name, parameters, returns)
         import_funcs = class_variable_get(:@@import_funcs)
         import_funcs << [func_name, parameters, returns]
