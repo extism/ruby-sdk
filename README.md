@@ -133,16 +133,16 @@ class KvEnvironment
   register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
 
   def kv_read(plugin, inputs, outputs, _user_data)
-    puts "Reading key=#{key}"
     key = plugin.input_as_string(inputs.first)
-    val = KV_STORE[key] || [0, 0, 0, 0].map(&:chr).join # 32 bit encoded 0
+    val = KV_STORE[key] || [0].pack('V') # get 4 LE bytes for 0 default
+    puts "Read from key=#{key}"
     plugin.output_string(outputs.first, val)
   end
 
   def kv_write(plugin, inputs, _outputs, _user_data)
     key = plugin.input_as_string(inputs.first)
     val = plugin.input_as_string(inputs[1])
-    puts "Writing value=#{val} to key=#{key}"
+    puts "Writing value=#{val.unpack1('V')} from key=#{key}"
     KV_STORE[key] = val
   end
 end
