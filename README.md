@@ -52,7 +52,7 @@ You'll generally load the plug-in from disk, but for simplicity let's load a pre
 
 ```ruby
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm"
-manifest = Extism::Manifest.from_url
+manifest = Extism::Manifest.from_url url
 plugin = Extism::Plugin.new(manifest)
 ```
 
