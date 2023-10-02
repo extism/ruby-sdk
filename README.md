@@ -108,18 +108,18 @@ Let's extend our count-vowels example a little. Instead of storing the `total` i
 
 > *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
 
-First let's create the manifest for our plug-in like usual but load up the `store_credit` plug-in:
+This is a different plug-in, so first let's create the manifest for our plug-in like usual but load up the `count_vowels_kvstore` plug-in:
 
 ```ruby
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm"
 manifest = Extism::Manifest.from_url(url)
 ```
 
-But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports.
+But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports for a KV store interface.
 
 In the ruby sdk, we have a concept for this called a [Host Environment](https://extism.github.io/ruby-sdk/Extism/HostEnvironment.html). An environment is an instance of a class that implements any host functions your plug-in needs.
 
-We want to expose two capabilities to our plugin, `kv_write(key: String, value: Bytes)` which writes a bytes value to a key and `kv_read(key: String) -> Bytes` which reads the bytes at the given `key`.
+We want to expose two functions to our plugin, `kv_write(key: String, value: Bytes)` which writes a bytes value to a key and `kv_read(key: String) -> Bytes` which reads the bytes at the given `key`.
 
 ```ruby
 # pretend this is Redis or something :)
