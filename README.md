@@ -104,15 +104,14 @@ Host functions allow us to grant new capabilities to our plug-ins from our appli
 
 ### Host Functions Example
 
-We've created a contrived, but familiar example to illustrate this. Suppose you are a stripe-like payments platform.
-When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-charge.succeeded) event occurs, we will call the `on_charge_succeeded` function on our merchant's plug-in and let them decide what to do with it. Here our merchant has some very specific requirements, if the account has spent more than $100, their currency is USD, and they have no credits on their account, it will add $10 credit to their account and then send them an email.
+Let's extend our count-vowels example a little. Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store. 
 
-> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/store_credit/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
+> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
 
 First let's create the manifest for our plug-in like usual but load up the `store_credit` plug-in:
 
 ```ruby
-url = "https://github.com/extism/plugins/releases/latest/download/store_credit.wasm"
+url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm"
 manifest = Extism::Manifest.from_url(url)
 ```
 
@@ -120,85 +119,55 @@ But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host
 
 In the ruby sdk, we have a concept for this called a [Host Environment](https://extism.github.io/ruby-sdk/Extism/HostEnvironment.html). An environment is an instance of a class that implements any host functions your plug-in needs.
 
-We want to expose two capabilities to our plugin, `add_credit(customer_id, amount)` which adds credit to an account and `send_email(customer_id, email)` which sends them an email.
+We want to expose two capabilities to our plugin, `kv_write(key: String, value: Bytes)` which writes a bytes value to a key and `kv_read(key: String) -> Bytes` which reads the bytes at the given `key`.
 
 ```ruby
+# pretend this is Redis or something :)
+KV_STORE = {}
 
-# This is global is just for demo purposes but would in
-# reality be in a database or something
-CUSTOMER = {
-  full_name: 'John Smith',
-  customer_id: 'abcd1234',
-  total_spend: {
-    currency: 'USD',
-    amount_in_cents: 20_000
-  },
-  credit: {
-    currency: 'USD',
-    amount_in_cents: 0
-  }
-}
-
-class MyEnvironment
+class KvEnvironment
   include Extism::HostEnvironment
 
-  # we need to register each import that the plug-in expects and match the Wasm signature
-  # register_import takes the name, the param types, and the return types
-  register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
-  register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
+  # We need to describe the wasm function signature of each host function
+  # to register them to this environment
+  register_import :kv_read, [Extism::ValType::I64], [Extism::ValType::I64]
+  register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
 
-  def add_credit(plugin, inputs, outputs, _user_data)
-    # add_credit takes a string `customer_id` as the first parameter
-    customer_id = plugin.input_as_string(inputs.first)
-    # it takes an object `amount` { amount_in_cents: int, currency: string } as the second parameter
-    amount = plugin.input_as_json(inputs[1])
-
-    # we're just going to print it out and add to the CUSTOMER global
-    puts "Adding Credit #{amount} to customer #{customer_id}"
-    CUSTOMER[:credit][:amount_in_cents] += amount['amount_in_cents']
-
-    # add_credit returns a Json object with the new customer details
-    plugin.return_json(outputs.first, CUSTOMER)
+  def kv_read(plugin, inputs, outputs, _user_data)
+    puts "Reading key=#{key}"
+    key = plugin.input_as_string(inputs.first)
+    val = KV_STORE[key] || [0, 0, 0, 0].map(&:chr).join # 32 bit encoded 0
+    plugin.output_string(outputs.first, val)
   end
 
-  def send_email(plugin, inputs, _outputs, _user_data)
-    # send_email takes a string `customer_id` as the first parameter
-    customer_id = plugin.input_as_string(inputs.first)
-    # it takes an object `email` { subject: string, body: string } as the second parameter
-    email = plugin.input_as_json(inputs[1])
-
-    # we'll just print it but you could imagine we'd put something 
-    # in a database or call an internal api to send this email
-    puts "Sending email #{email} to customer #{customer_id}"
-
-    # it doesn't return anything
+  def kv_write(plugin, inputs, _outputs, _user_data)
+    key = plugin.input_as_string(inputs.first)
+    val = plugin.input_as_string(inputs[1])
+    puts "Writing value=#{val} to key=#{key}"
+    KV_STORE[key] = val
   end
 end
+
 ```
 
 > *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class.
 
-Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
+Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some customer specific instance variables in there:
 
 ```ruby
-env = MyEnvironment.new
+env = KvEnvironment.new
 plugin = Extism::Plugin.new(manifest, environment: env)
 ```
 
 Now we can invoke the event:
 
 ```ruby
-event = {
-  event_type: 'charge.succeeded',
-  customer: CUSTOMER
-}
-result = plugin.call('on_charge_succeeded', JSON.generate(event))
-```
-
-This will print:
-
-```
-Adding Credit {"amount_in_cents"=>1000, "currency"=>"USD"} for customer abcd1234
-Sending email {"subject"=>"A gift for you John Smith", "body"=>"You have received $10 in store credi
-t!"} to customer abcd1234
+plugin.call("count_vowels", "Hello, World!")
+# => Read from key=count-vowels"
+# => Writing value=3 from key=count-vowels"
+# => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
+plugin.call("count_vowels", "Hello, World!")
+# => Read from key=count-vowels"
+# => Writing value=6 from key=count-vowels"
+# => {"count": 3, "total": 6, "vowels": "aeiouAEIOU"}
 ```
