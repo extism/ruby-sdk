@@ -98,17 +98,13 @@ plugin.call("count_vowels", "Yellow, World!")
 
 ### Host Functions
 
-Host functions allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
+Let's extend our count-vowels example a little bit. Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store. But Wasm can't use our KV store on it's own. This is where [Host Functions](https://extism.org/docs/concepts/host-functions) come in.
 
-> *Note*: Host functions can be a complicated topic. Please review this [concept doc](https://extism.org/docs/concepts/host-functions) if you are unsure how they work.
+[Host functions](https://extism.org/docs/concepts/host-functions) allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
 
-### Host Functions Example
-
-Let's extend our count-vowels example a little. Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store. 
+This is a different plug-in, so first let's create the manifest like usual but load up this `count_vowels_kvstore` plug-in:
 
 > *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
-
-This is a different plug-in, so first let's create the manifest for our plug-in like usual but load up the `count_vowels_kvstore` plug-in:
 
 ```ruby
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm"
