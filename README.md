@@ -1,14 +1,16 @@
 # Extism Ruby Host SDK
 
-This repo houses the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby applications to run Extism plug-ins.
+This repo contains the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby application to run Extism plug-ins.
+
+> **Note**: If you're unsure what Extism is or what an SDK is see our homepage: [https://extism.org](https://extism.org).
 
 > **Note**: This repo is 1.0 alpha version of the Ruby SDK and is a work in progress. We'd love any feedback you have on it, but consider using the supported ruby SDK in [extism/extism](https://github.com/extism/extism/tree/main/ruby) until we hit 1.0.
 
 ## Installation
 
-### Install the Extism Runtime
+### Install the Extism Runtime Dependency
 
-You first need to install the Extism Runtime which is a native shared object that this library uses to load and run the Wasm code. You can [download the shared library directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
+For this library, you first need to install the Extism Runtime. You can [download the shared object directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
 
 ```bash
 sudo extism lib install latest
@@ -18,9 +20,9 @@ sudo extism lib install latest
 #=> Copying extism.h to /usr/local/include/extism.h
 ```
 
-> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`
+> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`.
 
-### Install the Rubygem
+### Install the Gem
 
 Add this library to your [Gemfile](https://bundler.io/):
 
@@ -36,21 +38,20 @@ gem install extism --pre
 
 ## Getting Started
 
+This guide should walk you through some of the concepts in Extism and this ruby library.
+
 > *Note*: You should be able to follow this guide by copy pasting the code into `irb`.
-
-First you should require `"extism"`:
-
-```ruby
-require "extism"
-```
 
 ### Creating A Plug-in
 
-The primary concept in Extism is the plug-in. You can think of a plug-in as a code module stored in a `.wasm` file. You can [learn more about plug-ins here](https://extism.org/concepts/plug-in).
+The primary concept in Extism is the [plug-in](https://extism.org/docs/concepts/plug-in). You can think of a plug-in as a code module stored in a `.wasm` file.
 
-You'll generally load the plug-in from disk, but for simplicity let's load a pre-built demo plug-in from the web:
+You'll normally load a plug-in from disk, but since you may not have one handy let's load a demo plug-in from the web:
 
 ```ruby
+# First require the library
+require "extism"
+
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm"
 manifest = Extism::Manifest.from_url url
 plugin = Extism::Plugin.new(manifest)
@@ -60,14 +61,14 @@ plugin = Extism::Plugin.new(manifest)
 
 ### Calling A Plug-in's Exports
 
-This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using [Extism::Plugin#call](https://extism.github.io/ruby-sdk/Extism/Plugin.html#call-instance_method):
+This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such, it exposes one "export" function: `count_vowels`. We can call exports using [Extism::Plugin#call](https://extism.github.io/ruby-sdk/Extism/Plugin.html#call-instance_method):
 
 ```ruby
 plugin.call("count_vowels", "Hello, World!")
 # => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
 ```
 
-All exports have a simple interface of optional bytes in, and optional bytes out. This plug-in happens to take a string and return a JSON encoded string with a report of results.
+All exports have a simple interface of bytes-in and bytes-out. This plug-in happens to take a string and return a JSON encoded string with a report of results.
 
 ### Plug-in State
 
@@ -98,20 +99,22 @@ plugin.call("count_vowels", "Yellow, World!")
 
 ### Host Functions
 
-Let's extend our count-vowels example a little bit. Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store. But Wasm can't use our KV store on it's own. This is where [Host Functions](https://extism.org/docs/concepts/host-functions) come in.
+Let's extend our count-vowels example a little bit: Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store!
 
-[Host functions](https://extism.org/docs/concepts/host-functions) allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
+Wasm can't use our KV store on it's own. This is where [Host Functions](https://extism.org/docs/concepts/host-functions) come in.
 
-This is a different plug-in, so first let's create the manifest like usual but load up this `count_vowels_kvstore` plug-in:
+[Host functions](https://extism.org/docs/concepts/host-functions) allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed down and invoked from any language inside the plug-in.
 
-> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
+Let's load the manifest like usual but load up this `count_vowels_kvstore` plug-in:
 
 ```ruby
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm"
 manifest = Extism::Manifest.from_url(url)
 ```
 
-But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports for a KV store interface.
+> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
+
+Unlike our previous plug-in, this plug-in expects you to provide host functions that satisfy our its import interface for a KV store.
 
 In the ruby sdk, we have a concept for this called a [Host Environment](https://extism.github.io/ruby-sdk/Extism/HostEnvironment.html). An environment is an instance of a class that implements any host functions your plug-in needs.
 
@@ -143,10 +146,9 @@ class KvEnvironment
     KV_STORE[key] = val
   end
 end
-
 ```
 
-> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class.
+> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class. The `plugin` parameter is an instance of this class.
 
 Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some customer specific instance variables in there:
 
