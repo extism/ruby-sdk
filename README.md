@@ -1,14 +1,16 @@
 # Extism Ruby Host SDK
 
-This repo houses the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby applications to run Extism plug-ins.
+This repo contains the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby application to run Extism plug-ins.
+
+> **Note**: If you're unsure what Extism is or what an SDK is see our homepage: [https://extism.org](https://extism.org).
 
 > **Note**: This repo is 1.0 alpha version of the Ruby SDK and is a work in progress. We'd love any feedback you have on it, but consider using the supported ruby SDK in [extism/extism](https://github.com/extism/extism/tree/main/ruby) until we hit 1.0.
 
 ## Installation
 
-### Install the Extism Runtime
+### Install the Extism Runtime Dependency
 
-You first need to install the Extism Runtime which is a native shared object that this library uses to load and run the Wasm code. You can [download the shared library directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
+For this library, you first need to install the Extism Runtime. You can [download the shared object directly from a release](https://github.com/extism/extism/releases) or use the [Extism CLI](https://github.com/extism/cli) to install it:
 
 ```bash
 sudo extism lib install latest
@@ -18,9 +20,9 @@ sudo extism lib install latest
 #=> Copying extism.h to /usr/local/include/extism.h
 ```
 
-> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`
+> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`.
 
-### Install the Rubygem
+### Install the Gem
 
 Add this library to your [Gemfile](https://bundler.io/):
 
@@ -36,23 +38,22 @@ gem install extism --pre
 
 ## Getting Started
 
+This guide should walk you through some of the concepts in Extism and this ruby library.
+
 > *Note*: You should be able to follow this guide by copy pasting the code into `irb`.
-
-First you should require `"extism"`:
-
-```ruby
-require "extism"
-```
 
 ### Creating A Plug-in
 
-The primary concept in Extism is the plug-in. You can think of a plug-in as a code module stored in a `.wasm` file. You can [learn more about plug-ins here](https://extism.org/concepts/plug-in).
+The primary concept in Extism is the [plug-in](https://extism.org/docs/concepts/plug-in). You can think of a plug-in as a code module stored in a `.wasm` file.
 
-You'll generally load the plug-in from disk, but for simplicity let's load a pre-built demo plug-in from the web:
+You'll normally load a plug-in from disk, but since you may not have one handy let's load a demo plug-in from the web:
 
 ```ruby
+# First require the library
+require "extism"
+
 url = "https://github.com/extism/plugins/releases/latest/download/count_vowels.wasm"
-manifest = Extism::Manifest.from_url
+manifest = Extism::Manifest.from_url url
 plugin = Extism::Plugin.new(manifest)
 ```
 
@@ -60,14 +61,14 @@ plugin = Extism::Plugin.new(manifest)
 
 ### Calling A Plug-in's Exports
 
-This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such it exposes one "export" function: `count_vowels`. We can call exports using [Extism::Plugin#call](https://extism.github.io/ruby-sdk/Extism/Plugin.html#call-instance_method):
+This plug-in was written in Rust and it does one thing, it counts vowels in a string. As such, it exposes one "export" function: `count_vowels`. We can call exports using [Extism::Plugin#call](https://extism.github.io/ruby-sdk/Extism/Plugin.html#call-instance_method):
 
 ```ruby
 plugin.call("count_vowels", "Hello, World!")
 # => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
 ```
 
-All exports have a simple interface of optional bytes in, and optional bytes out. This plug-in happens to take a string and return a JSON encoded string with a report of results.
+All exports have a simple interface of bytes-in and bytes-out. This plug-in happens to take a string and return a JSON encoded string with a report of results.
 
 ### Plug-in State
 
@@ -98,107 +99,73 @@ plugin.call("count_vowels", "Yellow, World!")
 
 ### Host Functions
 
-Host functions allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed to and invoked from any language inside the plug-in.
+Let's extend our count-vowels example a little bit: Instead of storing the `total` in an ephemeral plug-in var, let's store it in a persistent key-value store!
 
-> *Note*: Host functions can be a complicated topic. Please review this [concept doc](https://extism.org/docs/concepts/host-functions) if you are unsure how they work.
+Wasm can't use our KV store on it's own. This is where [Host Functions](https://extism.org/docs/concepts/host-functions) come in.
 
-### Host Functions Example
+[Host functions](https://extism.org/docs/concepts/host-functions) allow us to grant new capabilities to our plug-ins from our application. They are simply some ruby methods you write which can be passed down and invoked from any language inside the plug-in.
 
-We've created a contrived, but familiar example to illustrate this. Suppose you are a stripe-like payments platform.
-When a [charge.succeeded](https://stripe.com/docs/api/events/types#event_types-charge.succeeded) event occurs, we will call the `on_charge_succeeded` function on our merchant's plug-in and let them decide what to do with it. Here our merchant has some very specific requirements, if the account has spent more than $100, their currency is USD, and they have no credits on their account, it will add $10 credit to their account and then send them an email.
-
-> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/store_credit/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
-
-First let's create the manifest for our plug-in like usual but load up the `store_credit` plug-in:
+Let's load the manifest like usual but load up this `count_vowels_kvstore` plug-in:
 
 ```ruby
-url = "https://github.com/extism/plugins/releases/latest/download/store_credit.wasm"
+url = "https://github.com/extism/plugins/releases/latest/download/count_vowels_kvstore.wasm"
 manifest = Extism::Manifest.from_url(url)
 ```
 
-But, unlike our `count_vowels` plug-in, this plug-in expects you to provide host functions that satisfy our plug-in's imports.
+> *Note*: The source code for this is [here](https://github.com/extism/plugins/blob/main/count_vowels_kvstore/src/lib.rs) and is written in rust, but it could be written in any of our PDK languages.
+
+Unlike our previous plug-in, this plug-in expects you to provide host functions that satisfy our its import interface for a KV store.
 
 In the ruby sdk, we have a concept for this called a [Host Environment](https://extism.github.io/ruby-sdk/Extism/HostEnvironment.html). An environment is an instance of a class that implements any host functions your plug-in needs.
 
-We want to expose two capabilities to our plugin, `add_credit(customer_id, amount)` which adds credit to an account and `send_email(customer_id, email)` which sends them an email.
+We want to expose two functions to our plugin, `kv_write(key: String, value: Bytes)` which writes a bytes value to a key and `kv_read(key: String) -> Bytes` which reads the bytes at the given `key`.
 
 ```ruby
+# pretend this is Redis or something :)
+KV_STORE = {}
 
-# This is global is just for demo purposes but would in
-# reality be in a database or something
-CUSTOMER = {
-  full_name: 'John Smith',
-  customer_id: 'abcd1234',
-  total_spend: {
-    currency: 'USD',
-    amount_in_cents: 20_000
-  },
-  credit: {
-    currency: 'USD',
-    amount_in_cents: 0
-  }
-}
-
-class MyEnvironment
+class KvEnvironment
   include Extism::HostEnvironment
 
-  # we need to register each import that the plug-in expects and match the Wasm signature
-  # register_import takes the name, the param types, and the return types
-  register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
-  register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
+  # We need to describe the wasm function signature of each host function
+  # to register them to this environment
+  register_import :kv_read, [Extism::ValType::I64], [Extism::ValType::I64]
+  register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
 
-  def add_credit(plugin, inputs, outputs, _user_data)
-    # add_credit takes a string `customer_id` as the first parameter
-    customer_id = plugin.input_as_string(inputs.first)
-    # it takes an object `amount` { amount_in_cents: int, currency: string } as the second parameter
-    amount = plugin.input_as_json(inputs[1])
-
-    # we're just going to print it out and add to the CUSTOMER global
-    puts "Adding Credit #{amount} to customer #{customer_id}"
-    CUSTOMER[:credit][:amount_in_cents] += amount['amount_in_cents']
-
-    # add_credit returns a Json object with the new customer details
-    plugin.return_json(outputs.first, CUSTOMER)
+  def kv_read(plugin, inputs, outputs, _user_data)
+    key = plugin.input_as_string(inputs.first)
+    val = KV_STORE[key] || [0].pack('V') # get 4 LE bytes for 0 default
+    puts "Read from key=#{key}"
+    plugin.output_string(outputs.first, val)
   end
 
-  def send_email(plugin, inputs, _outputs, _user_data)
-    # send_email takes a string `customer_id` as the first parameter
-    customer_id = plugin.input_as_string(inputs.first)
-    # it takes an object `email` { subject: string, body: string } as the second parameter
-    email = plugin.input_as_json(inputs[1])
-
-    # we'll just print it but you could imagine we'd put something 
-    # in a database or call an internal api to send this email
-    puts "Sending email #{email} to customer #{customer_id}"
-
-    # it doesn't return anything
+  def kv_write(plugin, inputs, _outputs, _user_data)
+    key = plugin.input_as_string(inputs.first)
+    val = plugin.input_as_string(inputs[1])
+    puts "Writing value=#{val.unpack1('V')} from key=#{key}"
+    KV_STORE[key] = val
   end
 end
 ```
 
-> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class.
+> *Note*: In order to write host functions you should get familiar with the methods on the [Extism::CurrentPlugin](https://extism.github.io/ruby-sdk/Extism/CurrentPlugin.html) class. The `plugin` parameter is an instance of this class.
 
-Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some merchant specific instance variables in there:
+Now we just need to create a new host environment and pass it in when loading the plug-in. Here our environment initializer takes no arguments, but you could imagine putting some customer specific instance variables in there:
 
 ```ruby
-env = MyEnvironment.new
+env = KvEnvironment.new
 plugin = Extism::Plugin.new(manifest, environment: env)
 ```
 
 Now we can invoke the event:
 
 ```ruby
-event = {
-  event_type: 'charge.succeeded',
-  customer: CUSTOMER
-}
-result = plugin.call('on_charge_succeeded', JSON.generate(event))
-```
-
-This will print:
-
-```
-Adding Credit {"amount_in_cents"=>1000, "currency"=>"USD"} for customer abcd1234
-Sending email {"subject"=>"A gift for you John Smith", "body"=>"You have received $10 in store credi
-t!"} to customer abcd1234
+plugin.call("count_vowels", "Hello, World!")
+# => Read from key=count-vowels"
+# => Writing value=3 from key=count-vowels"
+# => {"count": 3, "total": 3, "vowels": "aeiouAEIOU"}
+plugin.call("count_vowels", "Hello, World!")
+# => Read from key=count-vowels"
+# => Writing value=6 from key=count-vowels"
+# => {"count": 3, "total": 6, "vowels": "aeiouAEIOU"}
 ```

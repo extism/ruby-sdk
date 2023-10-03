@@ -15,6 +15,29 @@ CUSTOMER = {
   }
 }
 
+KV_STORE = {}
+
+class KvEnvironment
+  include Extism::HostEnvironment
+
+  register_import :kv_read, [Extism::ValType::I64], [Extism::ValType::I64]
+  register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
+
+  def kv_read(plugin, inputs, outputs, _user_data)
+    key = plugin.input_as_string(inputs.first)
+    val = KV_STORE[key] || [0].pack('V') # get 4 LE bytes for 0 default
+    puts "Read from key=#{key}"
+    plugin.output_string(outputs.first, val)
+  end
+
+  def kv_write(plugin, inputs, _outputs, _user_data)
+    key = plugin.input_as_string(inputs.first)
+    val = plugin.input_as_string(inputs[1])
+    puts "Writing value=#{val.unpack1('V')} from key=#{key}"
+    KV_STORE[key] = val
+  end
+end
+
 class Environment
   include Extism::HostEnvironment
 
@@ -61,6 +84,14 @@ class TestExtism < Minitest::Test
     assert_raises(Extism::Error) do
       _res = plugin.call('count_vowels', 'this is a test')
     end
+  end
+
+  def test_kv_store
+    plugin = Extism::Plugin.new(count_vowels_kvstore_manifest, environment: KvEnvironment.new)
+    res = JSON.parse plugin.call('count_vowels', 'this is a test')
+    assert_equal res['total'], 4
+    res = JSON.parse plugin.call('count_vowels', 'this is a test')
+    assert_equal res['total'], 8
   end
 
   def test_errors_on_bad_manifest
@@ -117,5 +148,9 @@ class TestExtism < Minitest::Test
 
   def store_credit_manifest
     Extism::Manifest.from_path File.join(__dir__, '../wasm/store_credit.wasm')
+  end
+
+  def count_vowels_kvstore_manifest
+    Extism::Manifest.from_path File.join(__dir__, '../wasm/count_vowels_kvstore.wasm')
   end
 end
