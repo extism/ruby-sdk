@@ -46,7 +46,7 @@ This guide should walk you through some of the concepts in Extism and this ruby 
 
 The primary concept in Extism is the [plug-in](https://extism.org/docs/concepts/plug-in). You can think of a plug-in as a code module stored in a `.wasm` file.
 
-You'll normally load a plug-in from disk, but since you may not have one handy let's load a demo plug-in from the web:
+Since you may not have an Extism plug-in on hand to test, let's load a demo plug-in from the web:
 
 ```ruby
 # First require the library
