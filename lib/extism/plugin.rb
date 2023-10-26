@@ -41,11 +41,14 @@ module Extism
       funcs_ptr.write_array_of_pointer(functions.map { |f| f.send(:pointer) })
       @plugin = LibExtism.extism_plugin_new(code, wasm.bytesize, funcs_ptr, functions.length, wasi, errmsg)
       if @plugin.null?
+        for f in functions
+          LibExtism.extism_function_free f.send(:pointer)
+        end
         err = errmsg.read_pointer.read_string
         LibExtism.extism_plugin_new_error_free errmsg.read_pointer
         raise Error, err
       end
-      $PLUGINS[object_id] = { plugin: @plugin }
+      $PLUGINS[object_id] = { plugin: @plugin, functions: functions }
       ObjectSpace.define_finalizer(self, $FREE_PLUGIN)
       return unless !config.nil? and @plugin.null?
 
@@ -95,6 +98,12 @@ module Extism
     # @return [void]
     def free
       return if @plugin.null?
+
+      functions = $PLUGINS[object_id][:functions]
+
+      for f in functions
+        LibExtism.extism_function_free f.send(:pointer)
+      end
 
       $PLUGINS.delete(object_id)
       LibExtism.extism_plugin_free(@plugin)
