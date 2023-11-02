@@ -7,6 +7,7 @@ module Extism
   module ValType
     I32 = 0
     I64 = 1
+    PTR = 1
     F32 = 2
     F64 = 3
     V128 = 4
@@ -25,6 +26,8 @@ module Extism
       when :I32
         :i32
       when :I64
+        :i64
+      when :PTR
         :i64
       when :F32
         :f32

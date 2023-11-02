@@ -127,8 +127,8 @@ class KvEnvironment
 
   # We need to describe the wasm function signature of each host function
   # to register them to this environment
-  register_import :kv_read, [Extism::ValType::I64], [Extism::ValType::I64]
-  register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
+  register_import :kv_read, [Extism::ValType::PTR], [Extism::ValType::PTR]
+  register_import :kv_write, [Extism::ValType::PTR, Extism::ValType::PTR], []
 
   def kv_read(plugin, inputs, outputs, _user_data)
     key = plugin.input_as_string(inputs.first)

@@ -20,8 +20,8 @@ KV_STORE = {}
 class KvEnvironment
   include Extism::HostEnvironment
 
-  register_import :kv_read, [Extism::ValType::I64], [Extism::ValType::I64]
-  register_import :kv_write, [Extism::ValType::I64, Extism::ValType::I64], []
+  register_import :kv_read, [Extism::ValType::PTR], [Extism::ValType::PTR]
+  register_import :kv_write, [Extism::ValType::PTR, Extism::ValType::PTR], []
 
   def kv_read(plugin, inputs, outputs, _user_data)
     key = plugin.input_as_string(inputs.first)
@@ -41,8 +41,8 @@ end
 class Environment
   include Extism::HostEnvironment
 
-  register_import :add_credit, [Extism::ValType::I64, Extism::ValType::I64], [Extism::ValType::I64]
-  register_import :send_email, [Extism::ValType::I64, Extism::ValType::I64], []
+  register_import :add_credit, [Extism::ValType::PTR, Extism::ValType::PTR], [Extism::ValType::PTR]
+  register_import :send_email, [Extism::ValType::PTR, Extism::ValType::PTR], []
 
   attr_accessor :credit_args, :email_args
 
