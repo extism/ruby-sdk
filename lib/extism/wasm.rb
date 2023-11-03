@@ -93,6 +93,9 @@ module Extism
       returns = LibExtism.from_int_array(@returns)
       @_pointer = LibExtism.extism_function_new(@name, args, @params.length, returns, @returns.length, c_func, free,
                                                 nil)
+      $FUNCTIONS[object_id] = { function: @_pointer}
+      ObjectSpace.define_finalizer(self, $FREE_FUNCTION)
+      return @_pointer
     end
 
     def c_func
