@@ -35,6 +35,16 @@ module Extism
     end
   }
 
+  
+  $FUNCTIONS = {}
+  $FREE_FUNCTION = proc { |ptr|
+    x = $FUNCTIONS[ptr]
+    unless x.nil?
+      LibExtism.extism_function_free(x[:function])
+      $FUNCTIONS.delete(ptr)
+    end
+  }
+
   # Represents a "block" of memory in Extism.
   # This memory is in the communication buffer b/w the
   # guest in the host and technically lives in host memory.
