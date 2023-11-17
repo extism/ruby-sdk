@@ -26,14 +26,12 @@ class KvEnvironment
   def kv_read(plugin, inputs, outputs, _user_data)
     key = plugin.input_as_string(inputs.first)
     val = KV_STORE[key] || [0].pack('V') # get 4 LE bytes for 0 default
-    puts "Read from key=#{key}"
     plugin.output_string(outputs.first, val)
   end
 
   def kv_write(plugin, inputs, _outputs, _user_data)
     key = plugin.input_as_string(inputs.first)
     val = plugin.input_as_string(inputs[1])
-    puts "Writing value=#{val.unpack1('V')} from key=#{key}"
     KV_STORE[key] = val
   end
 end
