@@ -2,8 +2,6 @@
 
 This repo contains the ruby gem for integrating with the [Extism](https://extism.org/) runtime. Install this library into your host ruby application to run Extism plug-ins.
 
-> **Note**: This repo is 1.0 alpha version of the Ruby SDK and we may push breaking changes in between versions until we hit 1.0.0 in December, 2023. However, it is ready to use and you should use this if you're building a new integration. We'd love any feedback on it.
-
 ## Installation
 
 ### Install the Extism Runtime Dependency
@@ -18,20 +16,18 @@ sudo extism lib install latest
 #=> Copying extism.h to /usr/local/include/extism.h
 ```
 
-> **Note**: This library has breaking changes and targets 1.0 of the runtime. For the time being, install the runtime from our nightly development builds on git: `sudo extism lib install --version git`.
-
 ### Install the Gem
 
 Add this library to your [Gemfile](https://bundler.io/):
 
 ```ruby
-gem 'extism', '1.0.0.pre.rc.5'
+gem 'extism', '~> 1.0.0'
 ```
 
 Or if installing on the system level:
 
 ```
-gem install extism --pre
+gem install extism
 ```
 
 ## Getting Started
