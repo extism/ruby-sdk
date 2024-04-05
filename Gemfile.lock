@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     extism (1.0.0)
-      ffi (>= 1.0.0)
+      ffi (~> 1.0)
 
 GEM
   remote: https://rubygems.org/
@@ -29,6 +29,7 @@ GEM
 
 PLATFORMS
   arm64-darwin-22
+  arm64-darwin-23
   x86_64-linux
 
 DEPENDENCIES
