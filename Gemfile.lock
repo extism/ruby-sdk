@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    extism (1.0.0)
+    extism (1.0.1)
       ffi (~> 1.0)
 
 GEM
