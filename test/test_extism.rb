@@ -64,7 +64,7 @@ class TestExtism < Minitest::Test
   end
 
   def test_plugin_call
-    plugin = Extism::Plugin.new(vowels_manifest)
+    plugin = Extism::Plugin.new(vowels_manifest, config: { vowels: 'aeiouyAEIOUY' })
     res = JSON.parse(plugin.call('count_vowels', 'this is a test'))
     assert_equal res['count'], 4
     res = JSON.parse(plugin.call('count_vowels', 'this is a test again'))
@@ -73,6 +73,9 @@ class TestExtism < Minitest::Test
     assert_equal res['count'], 6
     res = JSON.parse(plugin.call('count_vowels', '🌎hello🌎world🌎'))
     assert_equal res['count'], 3
+    res = JSON.parse(plugin.call('count_vowels', 'does y count?'))
+    assert_equal res['count'], 5
+    assert_equal res['vowels'], 'aeiouyAEIOUY'
   end
 
   def test_can_free_plugin

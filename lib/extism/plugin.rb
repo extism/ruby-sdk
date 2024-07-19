@@ -47,7 +47,7 @@ module Extism
       end
       $PLUGINS[object_id] = { plugin: @plugin }
       ObjectSpace.define_finalizer(self, $FREE_PLUGIN)
-      return unless !config.nil? and @plugin.null?
+      return if config.nil? or @plugin.null?
 
       s = JSON.generate(config)
       ptr = FFI::MemoryPointer.from_string(s)
