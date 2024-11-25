@@ -70,10 +70,12 @@ module Extism
     # @param params [Array[Extism::ValType]] An array of val types matching the import's params
     # @param returns [Array[Extism::ValType]] An array of val types matching the import returns
     # @param func_proc [Proc] A proc that will be executed when the host function is executed
+    # @param namespace [String] The Wasm namespace that will be used for the function
     # @param user_data [Object] Any reference to object you want to be passed back to you when the func is invoked
     # @param on_free [Proc] A proc triggered when this function is freed by the runtime. Not guaranteed to trigger.
-    def initialize(name, params, returns, func_proc, user_data: nil, on_free: nil)
+    def initialize(name, params, returns, func_proc, namespace: "extism:host/user", user_data: nil, on_free: nil)
       @name = name
+      @namespace = namespace
       @params = params
       @returns = returns
       @func = func_proc
@@ -93,6 +95,7 @@ module Extism
       returns = LibExtism.from_int_array(@returns)
       @_pointer = LibExtism.extism_function_new(@name, args, @params.length, returns, @returns.length, c_func, free,
                                                 nil)
+      LibExtism.extism_function_set_namespace(@_pointer, @namespace)
       $FUNCTIONS[object_id] = { function: @_pointer}
       ObjectSpace.define_finalizer(self, $FREE_FUNCTION)
       return @_pointer
