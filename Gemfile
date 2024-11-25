@@ -12,5 +12,5 @@ group :development do
   gem 'debug'
   gem 'minitest', '~> 5.20.0'
   gem 'rufo', '~> 0.13.0'
-  gem 'yard', '~> 0.9.28'
+  gem 'yard', '~> 0.9.36'
 end
