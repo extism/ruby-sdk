@@ -60,13 +60,17 @@ module Extism
     attach_function :extism_function_free, [:pointer], :void
     attach_function :extism_function_set_namespace, %i[pointer string], :void
     attach_function :extism_plugin_new, %i[pointer ExtismSize pointer ExtismSize bool pointer], :pointer
+    attach_function :extism_plugin_new_from_compiled, %i[pointer pointer], :pointer
+    attach_function :extism_compiled_plugin_new, %i[pointer ExtismSize pointer ExtismSize bool pointer], :pointer
     attach_function :extism_plugin_new_error_free, [:pointer], :void
     attach_function :extism_plugin_free, [:pointer], :void
+    attach_function :extism_compiled_plugin_free, [:pointer], :void
     attach_function :extism_plugin_cancel_handle, [:pointer], :pointer
     attach_function :extism_plugin_cancel, [:pointer], :bool
     attach_function :extism_plugin_config, %i[pointer pointer ExtismSize], :bool
     attach_function :extism_plugin_function_exists, %i[pointer string], :bool
     attach_function :extism_plugin_call, %i[pointer string pointer ExtismSize], :int32
+    attach_function :extism_plugin_call_with_host_context, %i[pointer string pointer ExtismSize pointer], :int32
     attach_function :extism_error, [:pointer], :string
     attach_function :extism_plugin_error, [:pointer], :string
     attach_function :extism_plugin_output_length, [:pointer], :ExtismSize
